@@ -113,7 +113,31 @@ async def home_interface():
             </div>
         </div>
 
+        <!-- Pomodoro Timer Section -->
+        <div class="container">
+            <h1>Pomodoro Timer</h1>
+            <div class="form-group">
+                <label for="minutes">Set Timer (minutes):</label>
+                <select id="minutes" name="minutes">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="25" selected>25</option>
+                    <option value="30">30</option>
+                    <option value="45">45</option>
+                    <option value="60">60</option>
+                </select>
+            </div>
+            <div id="countdown" style="font-size: 3em; text-align: center; margin: 20px 0;">25:00</div>
+            <div style="text-align: center;">
+                <button id="startPauseBtn">Start</button>
+                <button id="resetBtn">Reset</button>
+            </div>
+        </div>
+
         <script>
+            // Form stats script
             document.getElementById('pomoForm').addEventListener('submit', async function (e) {{
                 e.preventDefault();
                 const year = document.getElementById('year').value;
@@ -141,6 +165,80 @@ async def home_interface():
                     resultsDiv.innerHTML = `<p class="error">Failed to fetch data. Is the API server running?</p>`;
                 }}
             }});
+
+            // Pomodoro timer script
+            let timer;
+            let timeLeft;
+            let isRunning = false;
+            let selectedMinutes = parseInt(document.getElementById('minutes').value);
+
+            const countdownDisplay = document.getElementById('countdown');
+            const startPauseBtn = document.getElementById('startPauseBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const minutesSelect = document.getElementById('minutes');
+
+            function formatTime(seconds) {{
+                const min = Math.floor(seconds / 60);
+                const sec = seconds % 60;
+                return `${{min.toString().padStart(2, '0')}}:${{sec.toString().padStart(2, '0')}}`;
+            }}
+
+            function updateDisplay() {{
+                countdownDisplay.textContent = formatTime(timeLeft);
+            }}
+
+            function startTimer() {{
+                isRunning = true;
+                startPauseBtn.textContent = 'Pause';
+                minutesSelect.disabled = true;
+                timer = setInterval(() => {{
+                    if (timeLeft > 0) {{
+                        timeLeft--;
+                        updateDisplay();
+                    }} else {{
+                        clearInterval(timer);
+                        isRunning = false;
+                        startPauseBtn.textContent = 'Start';
+                        alert('Time is up!');
+                    }}
+                }}, 1000);
+            }}
+
+            function pauseTimer() {{
+                isRunning = false;
+                startPauseBtn.textContent = 'Start';
+                clearInterval(timer);
+            }}
+
+            function resetTimer() {{
+                pauseTimer();
+                timeLeft = selectedMinutes * 60;
+                updateDisplay();
+                minutesSelect.disabled = false;
+            }}
+
+            startPauseBtn.addEventListener('click', function () {{
+                if (!isRunning) {{
+                    if (timeLeft === undefined || timeLeft === 0) {{
+                        timeLeft = selectedMinutes * 60;
+                    }}
+                    startTimer();
+                }} else {{
+                    pauseTimer();
+                }}
+            }});
+
+            resetBtn.addEventListener('click', function () {{
+                resetTimer();
+            }});
+
+            minutesSelect.addEventListener('change', function () {{
+                selectedMinutes = parseInt(this.value);
+                resetTimer();
+            }});
+
+            // Initialize timer display
+            resetTimer();
         </script>
     </body>
     </html>
