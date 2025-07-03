@@ -146,24 +146,52 @@ async def home_interface():
                 
                 resultsDiv.innerHTML = '<p>Loading...</p>';
 
-                try {{
-                    const response = await fetch(`/pomo/${{year}}/${{month}}`);
-                    if (response.ok) {{
+                try {
+                    const response = await fetch(`/pomo/${year}/${month}`);
+                    if (response.ok) {
                         const data = await response.json();
                         resultsDiv.innerHTML = `
-                            <h3>Stats for ${{data.month_key}}</h3>
+                            <h3>Stats for ${data.month_key}</h3>
                             <ul>
-                                <li><strong>Pomodoros Completed:</strong> ${{data.pomodoros_completed}}</li>
-                                <li><strong>Short Breaks:</strong> ${{data.short_breaks}}</li>
-                                <li><strong>Long Breaks:</strong> ${{data.long_breaks}}</li>
-                            </ul>`;
-                    }} else {{
+                                <li>
+                                    <strong>Pomodoros Completed:</strong>
+                                    <input type="number" id="pomoCountInput" min="0" value="${data.pomodoros_completed}" style="width:80px;display:inline-block;">
+                                    <button id="savePomoBtn" style="margin-left:8px;">Save</button>
+                                </li>
+                                <li><strong>Short Breaks:</strong> ${data.short_breaks}</li>
+                                <li><strong>Long Breaks:</strong> ${data.long_breaks}</li>
+                            </ul>
+                        `;
+
+                        // Add event listener for Save button
+                        setTimeout(() => {
+                            document.getElementById('savePomoBtn').onclick = async function () {
+                                const pomoCount = parseInt(document.getElementById('pomoCountInput').value, 10);
+                                const payload = {
+                                    pomodoros_completed: pomoCount,
+                                    short_breaks: data.short_breaks,
+                                    long_breaks: data.long_breaks
+                                };
+                                const resp = await fetch(`/pomo/${year}/${month}`, {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify(payload)
+                                });
+                                if (resp.ok) {
+                                    alert("Saved!");
+                                } else {
+                                    alert("Failed to save.");
+                                }
+                            };
+                        }, 0);
+
+                    } else {
                         const errorData = await response.json();
-                        resultsDiv.innerHTML = `<p class="error">${{errorData.detail || 'An unexpected error occurred.'}}</p>`;
-                    }}
-                }} catch (error) {{
+                        resultsDiv.innerHTML = `<p class="error">${errorData.detail || 'An unexpected error occurred.'}</p>`;
+                    }
+                } catch (error) {
                     resultsDiv.innerHTML = `<p class="error">Failed to fetch data. Is the API server running?</p>`;
-                }}
+                }
             }});
 
             // Pomodoro timer script
@@ -285,3 +313,24 @@ async def update_pomo_for_month(
     write_db(db)
     
     return PomoData(month_key=month_key, **pomo_update_data.model_dump())
+
+@app.post("/pomo/{year}/{month}/increment", response_model=PomoData, tags=["Pomodoro"])
+async def increment_pomodoro(
+    year: int = FastApiPath(..., ge=2020, le=2100, description="The year of the record."),
+    month: int = FastApiPath(..., ge=1, le=12, description="The month of the record (1-12).")
+):
+    """
+    Increment the Pomodoros Completed count for a specific month and year.
+    """
+    db = read_db()
+    month_key = f"{year}-{month:02d}"
+    if month_key not in db:
+        # If not present, initialize with zeros
+        db[month_key] = {
+            "pomodoros_completed": 0,
+            "short_breaks": 0,
+            "long_breaks": 0
+        }
+    db[month_key]["pomodoros_completed"] += 1
+    write_db(db)
+    return PomoData(month_key=month_key, **db[month_key])
