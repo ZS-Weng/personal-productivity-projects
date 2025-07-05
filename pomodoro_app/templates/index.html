@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍅 Pomodoro Timer</h1>
+            <p>Stay focused and track your productivity</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Timer Section -->
+            <div class="timer-section">
+                <div class="timer-display">
+                    <div class="time-circle">
+                        <div class="time-text" id="timeDisplay">25:00</div>
+                        <div class="progress-ring">
+                            <svg width="200" height="200">
+                                <circle cx="100" cy="100" r="90" stroke-width="8" stroke="#e0e0e0" fill="transparent"/>
+                                <circle id="progressCircle" cx="100" cy="100" r="90" stroke-width="8" stroke="#ff6b6b" fill="transparent" stroke-dasharray="565.48" stroke-dashoffset="565.48"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timer-controls">
+                    <div class="time-input">
+                        <label for="timerMinutes">Timer (minutes):</label>
+                        <input type="number" id="timerMinutes" min="1" max="60" value="25">
+                    </div>
+                    
+                    <div class="control-buttons">
+                        <button id="startBtn" class="btn btn-primary">Start</button>
+                        <button id="pauseBtn" class="btn btn-secondary" disabled>Pause</button>
+                        <button id="resetBtn" class="btn btn-secondary">Reset</button>
+                    </div>
+                </div>
+
+                <div class="session-counter">
+                    <h3>Current Session</h3>
+                    <div class="counter-display">
+                        <span id="pomodoroCounter">0</span>
+                        <span class="counter-label">Pomodoros Completed</span>
+                    </div>
+                    <button id="saveBtn" class="btn btn-success" disabled>Save Session</button>
+                </div>
+            </div>
+
+            <!-- Statistics Section -->
+            <div class="stats-section">
+                <h2>📊 Statistics</h2>
+                
+                <div class="stats-filters">
+                    <select id="yearFilter">
+                        <option value="">All Years</option>
+                        <option value="2025">2025</option>
+                    </select>
+                    <select id="monthFilter">
+                        <option value="">All Months</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    <button id="filterBtn" class="btn btn-secondary">Filter</button>
+                </div>
+
+                <div class="stats-display">
+                    <div class="stat-card">
+                        <h3 id="totalPomodoros">0</h3>
+                        <p>Total Pomodoros</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalSessions">0</h3>
+                        <p>Total Sessions</p>
+                    </div>
+                </div>
+
+                <div class="monthly-breakdown" id="monthlyBreakdown"></div>
+            </div>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
