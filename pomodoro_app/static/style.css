@@ -190,13 +190,6 @@ header p {
     margin-bottom: 15px;
 }
 
-.counter-display span:first-child {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #e74c3c;
-    display: block;
-}
-
 .counter-label {
     font-size: 0.9rem;
     color: #7f8c8d;
@@ -298,6 +291,15 @@ header p {
     border-radius: 12px;
     font-size: 0.8rem;
     font-weight: 600;
+}
+
+#pomodoroCounter {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #e74c3c;
+    display: inline-block;
+    min-width: 2ch;
+    text-align: center;
 }
 
 /* Responsive Design */

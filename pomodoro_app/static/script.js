@@ -28,6 +28,8 @@ class PomodoroTimer {
 
         // Counter
         this.pomodoroCounter = document.getElementById('pomodoroCounter');
+        this.incrementBtn = document.getElementById('incrementBtn');
+        this.decrementBtn = document.getElementById('decrementBtn');
 
         // Stats elements
         this.yearFilter = document.getElementById('yearFilter');
@@ -45,6 +47,8 @@ class PomodoroTimer {
         this.saveBtn.addEventListener('click', () => this.saveSession());
         this.timerMinutesInput.addEventListener('change', () => this.changeTimerMinutes());
         this.filterBtn.addEventListener('click', () => this.loadStats());
+        this.incrementBtn.addEventListener('click', () => this.incrementPomodoro());
+        this.decrementBtn.addEventListener('click', () => this.decrementPomodoro());
     }
 
     changeTimerMinutes() {
@@ -112,6 +116,9 @@ class PomodoroTimer {
 
         // Update counter
         this.pomodoroCounter.textContent = this.pomodoroCount;
+
+        // Enable/disable Save button based on count
+        this.saveBtn.disabled = this.pomodoroCount === 0;
     }
 
     async saveSession() {
@@ -196,6 +203,18 @@ class PomodoroTimer {
             });
         } catch (err) {
             this.yearFilter.innerHTML = '<option value="">All Years</option><option value="2025">2025</option>';
+        }
+    }
+
+    incrementPomodoro() {
+        this.pomodoroCount++;
+        this.updateDisplay();
+    }
+
+    decrementPomodoro() {
+        if (this.pomodoroCount > 0) {
+            this.pomodoroCount--;
+            this.updateDisplay();
         }
     }
 }
