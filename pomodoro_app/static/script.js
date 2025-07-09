@@ -6,6 +6,7 @@ class PomodoroTimer {
         this.isRunning = false;
         this.timerInterval = null;
         this.pomodoroCount = 0;
+        this.endTime = null; // <-- Add this line
 
         this.initializeElements();
         this.setupEventListeners();
@@ -66,11 +67,15 @@ class PomodoroTimer {
         this.pauseBtn.disabled = false;
         this.timerMinutesInput.disabled = true;
 
+        // Set the expected end time
+        this.endTime = Date.now() + this.timeLeft * 1000;
+
         this.timerInterval = setInterval(() => {
-            if (this.timeLeft > 0) {
-                this.timeLeft--;
-                this.updateDisplay();
-            } else {
+            // Calculate remaining time based on endTime
+            const now = Date.now();
+            this.timeLeft = Math.max(0, Math.round((this.endTime - now) / 1000));
+            this.updateDisplay();
+            if (this.timeLeft <= 0) {
                 this.completePomodoro();
             }
         }, 1000);
@@ -82,12 +87,19 @@ class PomodoroTimer {
         clearInterval(this.timerInterval);
         this.startBtn.disabled = false;
         this.pauseBtn.disabled = true;
+        // Update timeLeft based on current time
+        if (this.endTime) {
+            const now = Date.now();
+            this.timeLeft = Math.max(0, Math.round((this.endTime - now) / 1000));
+        }
+        this.endTime = null;
     }
 
     resetTimer() {
         this.isRunning = false;
         clearInterval(this.timerInterval);
         this.timeLeft = this.timerMinutes * 60;
+        this.endTime = null;
         this.updateDisplay();
         this.startBtn.disabled = false;
         this.pauseBtn.disabled = true;
