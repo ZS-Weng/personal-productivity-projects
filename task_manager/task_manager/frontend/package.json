@@ -8,12 +8,12 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "svelte": "^3.44.0",
-    "axios": "^0.21.1"
+    "axios": "^0.21.1",
+    "svelte": "^3.59.2"
   },
   "devDependencies": {
-    "vite": "^2.6.4",
-    "svelte-preprocess": "^4.9.4"
+    "svelte-preprocess": "^4.9.4",
+    "vite": "^2.6.4"
   },
   "keywords": [
     "svelte",
