@@ -1,25 +1,42 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+import sqlite3
+from pathlib import Path
 
-# SQLite database URL - creates a file called pomodoro.db in the current directory
-SQLALCHEMY_DATABASE_URL = "sqlite:///./pomodoro.db"
+DB_PATH = Path(__file__).parent / "pomodoro.db"
 
-# Create SQLAlchemy engine
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-
-# Create SessionLocal class - each instance will be a database session
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Create Base class for our models
-Base = declarative_base()
-
-# Dependency to get database session
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS pomo_logs (
+            date TEXT PRIMARY KEY,
+            count INTEGER NOT NULL DEFAULT 0
+        )
+    """)
+    conn.commit()
+    return conn
+
+def get_pomos(date: str) -> int:
+    conn = get_db()
+    row = conn.execute("SELECT count FROM pomo_logs WHERE date = ?", (date,)).fetchone()
+    conn.close()
+    return row[0] if row else 0
+
+def set_pomos(date: str, count: int) -> int:
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO pomo_logs (date, count) VALUES (?, ?) ON CONFLICT(date) DO UPDATE SET count = ?",
+        (date, count, count)
+    )
+    conn.commit()
+    conn.close()
+    return count
+
+def increment_pomos(date: str) -> int:
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO pomo_logs (date, count) VALUES (?, 1) ON CONFLICT(date) DO UPDATE SET count = count + 1",
+        (date,)
+    )
+    conn.commit()
+    row = conn.execute("SELECT count FROM pomo_logs WHERE date = ?", (date,)).fetchone()
+    conn.close()
+    return row[0]
