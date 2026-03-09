@@ -1,100 +1,168 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dracula">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pomodoro Timer</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>🍅 Pomodoro Timer</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🍅 Pomodoro Timer</h1>
-            <p>Stay focused and track your productivity</p>
-        </header>
+<body class="min-h-screen flex items-center justify-center bg-base-200">
+<div class="card w-full max-w-md bg-base-100 shadow-xl">
+    <div class="card-body items-center text-center gap-6">
+        <h1 class="card-title text-3xl">🍅 Pomodoro</h1>
+        <p id="today" class="text-sm opacity-70"></p>
 
-        <div class="main-content">
-            <!-- Timer Section -->
-            <div class="timer-section">
-                <div class="timer-display">
-                    <div class="time-circle">
-                        <div class="time-text" id="timeDisplay">25:00</div>
-                        <div class="progress-ring">
-                            <svg width="200" height="200">
-                                <circle cx="100" cy="100" r="90" stroke-width="8" stroke="#e0e0e0" fill="transparent"/>
-                                <circle id="progressCircle" cx="100" cy="100" r="90" stroke-width="8" stroke="#ff6b6b" fill="transparent" stroke-dasharray="565.48" stroke-dashoffset="565.48"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+        <!-- Timer Display -->
+        <div id="timer" class="text-7xl font-mono font-bold countdown">25:00</div>
 
-                <div class="timer-controls">
-                    <div class="time-input">
-                        <label for="timerMinutes">Timer (minutes):</label>
-                        <input type="number" id="timerMinutes" min="1" max="60" value="25">
-                    </div>
-                    
-                    <div class="control-buttons">
-                        <button id="startBtn" class="btn btn-primary">Start</button>
-                        <button id="pauseBtn" class="btn btn-secondary" disabled>Pause</button>
-                        <button id="resetBtn" class="btn btn-secondary">Reset</button>
-                    </div>
-                </div>
+        <!-- Status Badge -->
+        <div class="badge badge-lg" id="status-badge">Work</div>
 
-                <div class="session-counter">
-                    <h3>Current Session</h3>
-                    <div class="counter-display">
-                        <button id="decrementBtn" class="btn btn-secondary" style="width:40px;">−</button>
-                        <span id="pomodoroCounter">0</span>
-                        <button id="incrementBtn" class="btn btn-secondary" style="width:40px;">+</button>
-                        <span class="counter-label">Pomodoros Completed</span>
-                    </div>
-                    <button id="saveBtn" class="btn btn-success" disabled>Save Session</button>
-                </div>
+        <!-- Controls -->
+        <div class="flex gap-2">
+            <button class="btn btn-primary" id="btn-start" onclick="startTimer()">Start</button>
+            <button class="btn btn-warning" id="btn-pause" onclick="pauseTimer()" disabled>Pause</button>
+            <button class="btn btn-error" id="btn-reset" onclick="resetTimer()">Reset</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Settings -->
+        <div class="w-full space-y-3">
+            <div class="form-control">
+                <label class="label"><span class="label-text">Work (minutes)</span></label>
+                <input type="number" id="work-min" value="25" min="1" max="120"
+                       class="input input-bordered w-full" onchange="resetTimer()">
             </div>
+            <div class="form-control">
+                <label class="label"><span class="label-text">Rest (minutes)</span></label>
+                <input type="number" id="rest-min" value="5" min="1" max="60"
+                       class="input input-bordered w-full" onchange="resetTimer()">
+            </div>
+        </div>
 
-            <!-- Statistics Section -->
-            <div class="stats-section">
-                <h2>📊 Statistics</h2>
-                
-                <div class="stats-filters">
-                    <select id="yearFilter">
-                        <option value="">All Years</option>
-                        <option value="2025">2025</option>
-                    </select>
-                    <select id="monthFilter">
-                        <option value="">All Months</option>
-                        <option value="1">January</option>
-                        <option value="2">February</option>
-                        <option value="3">March</option>
-                        <option value="4">April</option>
-                        <option value="5">May</option>
-                        <option value="6">June</option>
-                        <option value="7">July</option>
-                        <option value="8">August</option>
-                        <option value="9">September</option>
-                        <option value="10">October</option>
-                        <option value="11">November</option>
-                        <option value="12">December</option>
-                    </select>
-                    <button id="filterBtn" class="btn btn-secondary">Filter</button>
-                </div>
+        <div class="divider"></div>
 
-                <div class="stats-display">
-                    <div class="stat-card">
-                        <h3 id="totalPomodoros">0</h3>
-                        <p>Total Pomodoros</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="totalSessions">0</h3>
-                        <p>Total Sessions</p>
-                    </div>
-                </div>
+        <!-- Pomo Count -->
+        <div class="stat place-items-center">
+            <div class="stat-title">Pomos Today</div>
+            <div class="stat-value text-primary" id="pomo-count">0</div>
+        </div>
 
-                <div class="monthly-breakdown" id="monthlyBreakdown"></div>
+        <!-- Lookup / Update -->
+        <div class="w-full space-y-3">
+            <div class="form-control">
+                <label class="label"><span class="label-text">View / Edit Date</span></label>
+                <input type="date" id="lookup-date" class="input input-bordered w-full" onchange="lookupPomos()">
+            </div>
+            <div id="lookup-result" class="flex items-center gap-2 justify-center hidden">
+                <span id="lookup-label" class="text-sm"></span>
+                <input type="number" id="lookup-count" min="0" class="input input-bordered input-sm w-20">
+                <button class="btn btn-sm btn-accent" onclick="savePomos()">Save</button>
             </div>
         </div>
     </div>
-    <script src="/static/script.js"></script>
+</div>
+
+<script>
+let interval = null;
+let remaining = 25 * 60;
+let isWork = true;
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+function fmt(s) {
+    const m = String(Math.floor(s / 60)).padStart(2, '0');
+    const sec = String(s % 60).padStart(2, '0');
+    return `${m}:${sec}`;
+}
+
+function updateDisplay() {
+    document.getElementById('timer').textContent = fmt(remaining);
+}
+
+function resetTimer() {
+    clearInterval(interval); interval = null;
+    isWork = true;
+    remaining = parseInt(document.getElementById('work-min').value) * 60;
+    updateDisplay();
+    document.getElementById('status-badge').textContent = 'Work';
+    document.getElementById('status-badge').className = 'badge badge-lg';
+    document.getElementById('btn-start').disabled = false;
+    document.getElementById('btn-pause').disabled = true;
+}
+
+function startTimer() {
+    if (interval) return;
+    endTime = Date.now() + remaining * 1000
+    document.getElementById('btn-start').disabled = true;
+    document.getElementById('btn-pause').disabled = false;
+    interval = setInterval(() => {
+        remaining = Math.round((endTime - Date.now()) / 1000);
+        updateDisplay();
+        if (remaining <= 0) {
+            clearInterval(interval); interval = null;
+            if (isWork) {
+                fetch(`/api/pomos/${todayStr()}/increment`, {method:'POST'})
+                    .then(r => r.json()).then(d => {
+                        document.getElementById('pomo-count').textContent = d.count;
+                    });
+                isWork = false;
+                remaining = parseInt(document.getElementById('rest-min').value) * 60;
+                document.getElementById('status-badge').textContent = 'Rest';
+                document.getElementById('status-badge').className = 'badge badge-lg badge-success';
+            } else {
+                isWork = true;
+                remaining = parseInt(document.getElementById('work-min').value) * 60;
+                document.getElementById('status-badge').textContent = 'Work';
+                document.getElementById('status-badge').className = 'badge badge-lg';
+            }
+            updateDisplay();
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-pause').disabled = true;
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    clearInterval(interval); interval = null;
+    document.getElementById('btn-start').disabled = false;
+    document.getElementById('btn-pause').disabled = true;
+}
+
+async function loadToday() {
+    document.getElementById('today').textContent = todayStr();
+    document.getElementById('lookup-date').value = todayStr();
+    const r = await fetch(`/api/pomos/${todayStr()}`);
+    const d = await r.json();
+    document.getElementById('pomo-count').textContent = d.count;
+}
+
+async function lookupPomos() {
+    const date = document.getElementById('lookup-date').value;
+    if (!date) return;
+    const r = await fetch(`/api/pomos/${date}`);
+    const d = await r.json();
+    document.getElementById('lookup-label').textContent = `${date}:`;
+    document.getElementById('lookup-count').value = d.count;
+    document.getElementById('lookup-result').classList.remove('hidden');
+}
+
+async function savePomos() {
+    const date = document.getElementById('lookup-date').value;
+    const count = parseInt(document.getElementById('lookup-count').value);
+    await fetch(`/api/pomos/${date}`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({count})
+    });
+    if (date === todayStr()) {
+        document.getElementById('pomo-count').textContent = count;
+    }
+    document.getElementById('lookup-result').classList.add('hidden');
+}
+
+loadToday();
+</script>
 </body>
 </html>
