@@ -103,6 +103,7 @@ function startTimer() {
         updateDisplay();
         if (remaining <= 0) {
             clearInterval(interval); interval = null;
+            alert("Time's up!");
             if (isWork) {
                 fetch(`/api/pomos/${todayStr()}/increment`, {method:'POST'})
                     .then(r => r.json()).then(d => {
