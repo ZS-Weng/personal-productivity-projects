@@ -14,7 +14,7 @@ if not GEMINI_API_KEY:
 #CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
 
 # Model selection
-DEFAULT_MODEL = "gemini"  # or "claude"
+DEFAULT_MODEL = "gemini-2.5-flash-lite"  # or "claude"
 
 # Other settings
 MAX_TOKENS = 1000

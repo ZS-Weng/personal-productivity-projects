@@ -1,24 +1,13 @@
 # llm_client.py - Abstraction layer for LLM APIs
 
 import config
+from google import genai
 
-class LLMClient:
-    def __init__(self, model=config.DEFAULT_MODEL):
-        self.model = model
-        if model == "gemini":
-            # Import and setup Gemini
-            pass
-        elif model == "claude":
-            # Import and setup Claude
-            pass
-        else:
-            raise ValueError("Unsupported model")
+# Configure the API key
+client = genai.Client()
 
-    def generate(self, prompt):
-        if self.model == "gemini":
-            # Call Gemini API
-            pass
-        elif self.model == "claude":
-            # Call Claude API
-            pass
-        return "Response from " + self.model
+def generate_response(prompt,model=config.DEFAULT_MODEL):
+    response = client.models.generate_content(
+    model=model, contents=prompt
+    )
+    return response.text
