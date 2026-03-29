@@ -27,3 +27,11 @@ async def update_pomos(date: str, body: PomoUpdate):
 async def increment_pomos(date: str):
     count = db.increment_pomos(date)
     return {"date": date, "count": count}
+
+@app.get("/analytics", response_class=HTMLResponse)
+async def analytics(request: Request):
+    return templates.TemplateResponse("analytics.html", {"request": request})
+
+@app.get("/api/pomos")
+async def get_all_pomos():
+    return db.get_all_pomos()

@@ -40,3 +40,9 @@ def increment_pomos(date: str) -> int:
     row = conn.execute("SELECT count FROM pomo_logs WHERE date = ?", (date,)).fetchone()
     conn.close()
     return row[0]
+
+def get_all_pomos() -> list[dict]:
+    conn = get_db()
+    rows = conn.execute("SELECT date, count FROM pomo_logs ORDER BY date").fetchall()
+    conn.close()
+    return [{"date": r[0], "count": r[1]} for r in rows]

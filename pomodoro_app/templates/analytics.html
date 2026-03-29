@@ -3,7 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍅 Pomodoro Timer</title>
+    <title>📊 Pomodoro Analytics</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+<body class="min-h-screen flex items-center justify-center bg-base-200">
+<div class="card w-full max-w-2xl bg-base-100 shadow-xl">
+    <div class="card-body items-center text-center gap-6">
+
+        <div class="flex justify-between w-full items-center">
+            <a href="/" class="btn btn-ghost btn-sm">🍅 Timer</a>
+            <h1 class="card-title text-3xl">📊 Analytics</h1>
+            <div class="w-16"></div>
+        </div>
+
+        <!-- Key Stats -->
+        <div class="stats stats-vertical sm:stats-horizontal shadow w-full">
+            <div class="stat place-items-center">
+                <div class="stat-title">Total Pomos</div>
+                <div class="stat-value text-primary" id="total">0</div>
+            </div>
+            <div class="stat place-items-center">
+                <div class="stat-title">Days Active</div>
+                <div class="stat-value text-secondary" id="days">0</div>
+            </div>
+            <div class="stat place-items-center">
+                <div class="stat-title">Daily Average</div>
+                <div class="stat-value text-accent" id="avg">0</div>
+            </div>
+            <div class="stat place-items-center">
+                <div class="stat-title">Best Day</div>
+                <div class="stat-value text-success" id="best">0</div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Trend Chart -->
+        <div class="w-full" style="height: 300px;">
+            <canvas id="chart"></canvas>
+        </div>
+
+        <!-- Daily Log Table -->
+        <div class="divider"></div>
+        <div class="overflow-x-auto w-full">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr><th>Date</th><th>Day</th><th>Pomos</th></tr>
+                </thead>
+                <tbody id="log-body"></tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+async function loadAnalytics() {
+    const r = await fetch('/api/pomos');
+    const data = await r.json();
+
+    if (data.length === 0) {
+        document.getElementById('total').textContent = '0';
+        document.getElementById('days').textContent = '0';
+        document.getElementById('avg').textContent = '0';
+        document.getElementById('best').textContent = '0';
+        return;
+    }
+
+    // Key stats
+    const total = data.reduce((sum, d) => sum + d.count, 0);
+    const days = data.length;
+    const avg = (total / days).toFixed(1);
+    const best = Math.max(...data.map(d => d.count));
+
+    document.getElementById('total').textContent = total;
+    document.getElementById('days').textContent = days;
+    document.getElementById('avg').textContent = avg;
+    document.getElementById('best').textContent = best;
+
+    // Table
+    const tbody = document.getElementById('log-body');
+    tbody.innerHTML = '';
+    data.slice().reverse().forEach(d => {
+        const day = dayNames[new Date(d.date + 'T00:00:00').getDay()];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${d.date}</td><td>${day}</td><td>${d.count}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    // Chart
+    new Chart(document.getElementById('chart'), {
+        type: 'bar',
+        data: {
+            labels: data.map(d => d.date),
+            datasets: [{
+                label: 'Pomos',
+                data: data.map(d => d.count),
+                backgroundColor: 'rgba(101, 163, 255, 0.6)',
+                borderColor: 'rgba(101, 163, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, color: '#a6adbb' },
+                    grid: { color: 'rgba(166,173,187,0.1)' }
+                },
+                x: {
+                    ticks: { color: '#a6adbb' },
+                    grid: { color: 'rgba(166,173,187,0.1)' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#a6adbb' } }
+            }
+        }
+    });
+}
+
+loadAnalytics();
+</script>
+</body>
+</html>
