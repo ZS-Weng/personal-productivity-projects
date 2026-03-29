@@ -14,11 +14,11 @@ def fetch_page_to_md(url, subfolder=None):
     h = html2text.HTML2Text()
     response = httpx.get(url)
     markdown = h.handle(response.text)
-    base_path = Path("../research")
+    base_path = Path("research")
     if subfolder:
-        os.makedirs(f"../research/{subfolder}", exist_ok=True)
         filename = base_path/f"{subfolder}/{url.split('/')[-2]}.md"
     else:
         filename = base_path/f"{url.split('/')[-2]}.md"
-    with open(filename, "w") as f:
+    filename.parent.mkdir(parents=True, exist_ok=True)
+    with open(filename, "w", encoding="utf-8") as f:
         f.write(markdown)
