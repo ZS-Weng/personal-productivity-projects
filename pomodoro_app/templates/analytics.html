@@ -40,13 +40,30 @@
 
         <div class="divider"></div>
 
-        <!-- Trend Chart -->
+        <!-- Date Trend Chart -->
+        <h2 class="text-xl font-bold">Daily Trend</h2>
         <div class="w-full" style="height: 300px;">
             <canvas id="chart"></canvas>
         </div>
 
+        <!-- Day of Week Aggregation -->
+        <div class="divider"></div>
+        <h2 class="text-xl font-bold">By Day of Week</h2>
+        <div class="w-full" style="height: 250px;">
+            <canvas id="day-chart"></canvas>
+        </div>
+        <div class="overflow-x-auto w-full">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr><th>Day</th><th>Total Pomos</th><th>Sessions</th><th>Average</th></tr>
+                </thead>
+                <tbody id="day-body"></tbody>
+            </table>
+        </div>
+
         <!-- Daily Log Table -->
         <div class="divider"></div>
+        <h2 class="text-xl font-bold">Daily Log</h2>
         <div class="overflow-x-auto w-full">
             <table class="table table-zebra w-full">
                 <thead>
@@ -61,6 +78,62 @@
 
 <script>
 const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const dayOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function renderDayAggregation(data) {
+    const agg = {};
+    dayOrder.forEach(d => agg[d] = { total: 0, sessions: 0 });
+
+    data.forEach(d => {
+        const day = dayNames[new Date(d.date + 'T00:00:00').getDay()];
+        agg[day].total += d.count;
+        agg[day].sessions += 1;
+    });
+
+    // Table
+    const tbody = document.getElementById('day-body');
+    tbody.innerHTML = '';
+    dayOrder.forEach(day => {
+        const { total, sessions } = agg[day];
+        const avg = sessions > 0 ? (total / sessions).toFixed(1) : '0';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${day}</td><td>${total}</td><td>${sessions}</td><td>${avg}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    // Chart
+    new Chart(document.getElementById('day-chart'), {
+        type: 'bar',
+        data: {
+            labels: dayOrder,
+            datasets: [{
+                label: 'Avg Pomos',
+                data: dayOrder.map(d => agg[d].sessions > 0 ? (agg[d].total / agg[d].sessions).toFixed(1) : 0),
+                backgroundColor: 'rgba(255, 183, 77, 0.6)',
+                borderColor: 'rgba(255, 183, 77, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, color: '#a6adbb' },
+                    grid: { color: 'rgba(166,173,187,0.1)' }
+                },
+                x: {
+                    ticks: { color: '#a6adbb' },
+                    grid: { color: 'rgba(166,173,187,0.1)' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#a6adbb' } }
+            }
+        }
+    });
+}
 
 async function loadAnalytics() {
     const r = await fetch('/api/pomos');
@@ -85,7 +158,7 @@ async function loadAnalytics() {
     document.getElementById('avg').textContent = avg;
     document.getElementById('best').textContent = best;
 
-    // Table
+    // Daily log table
     const tbody = document.getElementById('log-body');
     tbody.innerHTML = '';
     data.slice().reverse().forEach(d => {
@@ -95,7 +168,7 @@ async function loadAnalytics() {
         tbody.appendChild(tr);
     });
 
-    // Chart
+    // Date trend chart
     new Chart(document.getElementById('chart'), {
         type: 'bar',
         data: {
@@ -127,6 +200,9 @@ async function loadAnalytics() {
             }
         }
     });
+
+    // Day of week aggregation
+    renderDayAggregation(data);
 }
 
 loadAnalytics();
