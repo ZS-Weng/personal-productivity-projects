@@ -3,6 +3,7 @@
 from config import DEFAULT_MODEL
 from llm_client import generate_response
 from tools.web_scraper import fetch_page, fetch_page_to_md
+from tools.local_search import load_knowledge_base
 
 def summarize_page():
     url = "https://www.mot.gov.sg/news-resources/newsroom/speech-by-acting-minister-for-transport-mr-jeffrey-siow-at-ministry-of-transport-s-committee-of-supply-debate-2026/"
@@ -13,12 +14,21 @@ def summarize_page():
 
 def html_to_md(url):
     fetch_page_to_md(url, subfolder="budget_2026")
+
+def fetch_knowledge_base():
+    knowledge_base = load_knowledge_base()
+    for title, content in knowledge_base.items():
+        print(f"Title: {title}\nContent: {content[:200]}...\n")
     
 if __name__ == "__main__":
-    # summarize_page()
-    list_url = ["https://www.mot.gov.sg/news-resources/newsroom/speech-by-minister-of-state-for-transport-mr-baey-yam-keng-at-ministry-of-transport-s-committee-of-supply-debate-2026/",
-                "https://www.mot.gov.sg/news-resources/newsroom/speech-by-senior-minister-of-state-for-transport--ms-sun-xueling-at-ministry-of-transport-s-committee-of-supply-debate-2026/",
-                "https://www.mot.gov.sg/news-resources/newsroom/speech-by-senior-minister-of-state-for-transport-and-law-mr-murali-pillai-at-ministry-of-transport-s-committee-of-supply-2026-debate/"]
+    # # summarize_page()
+    # list_url = [
+    #     "https://www.mddi.gov.sg/newsroom/speech-by-sms-tan-kiat-how-at-the-committee-of-supply-debate-2026/",
+    #     "https://www.mddi.gov.sg/newsroom/speech-by-mos-jasmin-lau-at-the-committee-of-supply-debate-2026/",
+    #     "https://www.mddi.gov.sg/newsroom/-speech-by-mos-rahayu-mahzam-at-the-committee-of-supply-debate-2026/",
+    #     "https://www.mddi.gov.sg/newsroom/speech-by-minister-josephine-teo-at-the-committee-of-supply-debate-2026/",
+    # ]
 
-    for url in list_url:
-        html_to_md(url)
+    # for url in list_url:
+    #     html_to_md(url)
+    fetch_knowledge_base()

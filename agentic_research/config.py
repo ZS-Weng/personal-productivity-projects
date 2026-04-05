@@ -2,6 +2,7 @@
 
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
@@ -19,3 +20,6 @@ DEFAULT_MODEL = "gemini-2.5-flash-lite"  # or "claude"
 # Other settings
 MAX_TOKENS = 1000
 TEMPERATURE = 0.7
+
+#Paths 
+RESEARCH_DIR = Path("research")
