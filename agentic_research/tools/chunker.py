@@ -34,3 +34,18 @@ def chunk_text(text, chunk_size, overlap):
         start += end_adj - overlap
     
     return chunks
+
+## Code used for testing of chunking behaviour
+# text =     """
+#     Splits the input text into chunks of specified size with overlap.
+
+#     Args:
+#         text (str): The input text to be chunked.
+#         chunk_size (int): The maximum size of each chunk.
+#         overlap (int): The number of characters to overlap between chunks.
+
+#     Returns:
+#         List[str]: A list of text chunks.
+#     """
+
+# print(chunk_text(text, 100, 30))
