@@ -1,9 +1,12 @@
 # main.py - Entry point
 
 from config import DEFAULT_MODEL
+from config import RESEARCH_DIR
 from llm_client import generate_response
 from tools.web_scraper import fetch_page, fetch_page_to_md
 from tools.local_search import load_knowledge_base
+from tools.chunker import chunk_text
+from tools.vector_store import get_collection, add_to_collection
 
 def summarize_page():
     url = "https://www.mot.gov.sg/news-resources/newsroom/speech-by-acting-minister-for-transport-mr-jeffrey-siow-at-ministry-of-transport-s-committee-of-supply-debate-2026/"
@@ -15,20 +18,20 @@ def summarize_page():
 def html_to_md(url):
     fetch_page_to_md(url, subfolder="budget_2026")
 
-def fetch_knowledge_base():
-    knowledge_base = load_knowledge_base()
-    for title, content in knowledge_base.items():
-        print(f"Title: {title}\nContent: {content[:200]}...\n")
-    
-if __name__ == "__main__":
-    # # summarize_page()
-    # list_url = [
-    #     "https://www.mddi.gov.sg/newsroom/speech-by-sms-tan-kiat-how-at-the-committee-of-supply-debate-2026/",
-    #     "https://www.mddi.gov.sg/newsroom/speech-by-mos-jasmin-lau-at-the-committee-of-supply-debate-2026/",
-    #     "https://www.mddi.gov.sg/newsroom/-speech-by-mos-rahayu-mahzam-at-the-committee-of-supply-debate-2026/",
-    #     "https://www.mddi.gov.sg/newsroom/speech-by-minister-josephine-teo-at-the-committee-of-supply-debate-2026/",
-    # ]
+def fetch_knowledge_base(path=RESEARCH_DIR/'budget_2026'):
+    knowledge_base = load_knowledge_base(path=path)
+    return knowledge_base
 
-    # for url in list_url:
-    #     html_to_md(url)
+def add_collection(path=RESEARCH_DIR/'budget_2026'):
+    knowledge_base = load_knowledge_base(path=path)
+    collection = get_collection(path.name)
+    for title, doc in knowledge_base.items():
+        chunks = chunk_text(doc['content'])
+        documents = [{"id": f"{title}_{i}", 
+                      "text": chunk,
+                      "metadata": {"title": title, "sub_folder": path.name, "id": f"{id}"}} for i, chunk in enumerate(chunks)]
+        add_to_collection(collection, documents)
+        
+
+if __name__ == "__main__":
     fetch_knowledge_base()
