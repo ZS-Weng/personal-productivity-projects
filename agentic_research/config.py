@@ -23,3 +23,4 @@ TEMPERATURE = 0.7
 
 #Paths 
 RESEARCH_DIR = Path("research")
+CHROMA_DIR = Path("chroma_db")

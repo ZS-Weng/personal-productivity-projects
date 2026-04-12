@@ -34,4 +34,4 @@ def add_collection(path=RESEARCH_DIR/'budget_2026'):
         
 
 if __name__ == "__main__":
-    fetch_knowledge_base()
+    add_collection(path=RESEARCH_DIR/'budget_2026')
