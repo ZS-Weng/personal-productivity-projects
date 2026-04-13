@@ -18,7 +18,7 @@ def chunk_text(text, chunk_size=1000, overlap=200):
     min_chunk = int(chunk_size - overlap)
     chunks = []
     start = 0
-    while start < len(text):
+    while start < (len(text) - overlap):
         end = min(start + chunk_size, len(text))
         temp_chunk = text[start:end]
         if temp_chunk.rfind("\n\n") != -1 and temp_chunk.rfind("\n\n") >= min_chunk:
@@ -28,6 +28,9 @@ def chunk_text(text, chunk_size=1000, overlap=200):
         elif temp_chunk.rfind(".") != -1 and temp_chunk.rfind(".") >= min_chunk:
             end_adj = temp_chunk.rfind(".")
         else:
+            end_adj = len(temp_chunk)
+
+        if end_adj <= overlap:
             end_adj = len(temp_chunk)
 
         chunks.append(text[start:start + end_adj])

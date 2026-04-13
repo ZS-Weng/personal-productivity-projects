@@ -6,7 +6,7 @@ from llm_client import generate_response
 from tools.web_scraper import fetch_page, fetch_page_to_md
 from tools.local_search import load_knowledge_base
 from tools.chunker import chunk_text
-from tools.vector_store import get_collection, add_to_collection
+from tools.vector_store import get_collection, add_to_collection, delete_collection
 
 def summarize_page():
     url = "https://www.mot.gov.sg/news-resources/newsroom/speech-by-acting-minister-for-transport-mr-jeffrey-siow-at-ministry-of-transport-s-committee-of-supply-debate-2026/"
@@ -22,16 +22,16 @@ def fetch_knowledge_base(path=RESEARCH_DIR/'budget_2026'):
     knowledge_base = load_knowledge_base(path=path)
     return knowledge_base
 
-def add_collection(path=RESEARCH_DIR/'budget_2026'):
+def collection_full_refresh(path=RESEARCH_DIR/'budget_2026'):
     knowledge_base = load_knowledge_base(path=path)
-    collection = get_collection(path.name)
+    collection_name = path.name
+    delete_collection(collection_name)
     for title, doc in knowledge_base.items():
-        chunks = chunk_text(doc['content'])
-        documents = [{"id": f"{title}_{i}", 
-                      "text": chunk,
-                      "metadata": {"title": title, "sub_folder": path.name, "id": f"{id}"}} for i, chunk in enumerate(chunks)]
-        add_to_collection(collection, documents)
+        chunks = chunk_text(doc)
+        ids = [f"{title}_{i}" for i, chunk in enumerate(chunks)]
+        documents = [chunk for i, chunk in enumerate(chunks)]
+        metadatas = [{"title": title, "sub_folder": path.name, "chunk_index": i} for i, chunk in enumerate(chunks)]
+        add_to_collection(collection_name, ids=ids, documents=documents, metadatas=metadatas)
         
-
 if __name__ == "__main__":
-    add_collection(path=RESEARCH_DIR/'budget_2026')
+    collection_full_refresh(path=RESEARCH_DIR/'budget_2026')
