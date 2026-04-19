@@ -32,6 +32,12 @@ def collection_full_refresh(path=RESEARCH_DIR/'budget_2026'):
         documents = [chunk for i, chunk in enumerate(chunks)]
         metadatas = [{"title": title, "sub_folder": path.name, "chunk_index": i} for i, chunk in enumerate(chunks)]
         add_to_collection(collection_name, ids=ids, documents=documents, metadatas=metadatas)
+def query_knowledge_base(query, collection_name):
+    collection = get_collection(collection_name)
+    results = collection.query(query_texts=["What are the key transport plans?"], n_results=3)
+    prompt = f"Based on the following context: {results},\n\nanswer the question: {query}"
+    response = generate_response(prompt)
+    print(response)
         
 if __name__ == "__main__":
     collection_full_refresh(path=RESEARCH_DIR/'budget_2026')
