@@ -16,3 +16,8 @@ def get_collection(collection_name):
 def add_to_collection(collection_name,documents,ids,metadatas):
     collection = get_collection(collection_name)
     collection.add(documents=documents, ids=ids, metadatas=metadatas)
+
+def query_collection(query, collection_name):
+    collection = get_collection(collection_name)
+    results = collection.query(query_texts=[f"{query}"], n_results=3)
+    return results
