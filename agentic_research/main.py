@@ -7,6 +7,7 @@ from tools.web_scraper import fetch_page, fetch_page_to_md
 from tools.local_search import load_knowledge_base
 from tools.chunker import chunk_text
 from tools.vector_store import get_collection, add_to_collection, delete_collection
+from agents.agent_tools import search_knowledge_base
 
 def summarize_page():
     url = "https://www.mot.gov.sg/news-resources/newsroom/speech-by-acting-minister-for-transport-mr-jeffrey-siow-at-ministry-of-transport-s-committee-of-supply-debate-2026/"
@@ -40,5 +41,5 @@ def query_knowledge_base(query, collection_name):
     print(response)
         
 if __name__ == "__main__":
-    query_knowledge_base("What are the key opportunities as one of the transport operators in Singapore?", "budget_2026")
+    print(search_knowledge_base("What are the key opportunities as one of the transport operators in Singapore?", "budget_2026"))
     # collection_full_refresh(path=RESEARCH_DIR/'budget_2026')
