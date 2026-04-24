@@ -1,7 +1,7 @@
 import json
 from google import genai
 import config
-from tools.vector_store import query_vector_store
+from agents.agent_tools import search_knowledge_base
 
 client = genai.Client()          
 def run_agent(user_query: str, max_steps: int = 5):
