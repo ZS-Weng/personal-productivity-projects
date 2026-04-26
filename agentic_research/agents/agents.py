@@ -5,18 +5,17 @@ from agents.agent_tools import search_knowledge_base
 
 client = genai.Client()          
 def run_agent(user_query: str, max_steps: int = 5):
-    messages = [{"role": "user", "content": user_query}]
-    
-    for step in range(max_steps):
-        response = llm.call_with_tools(messages, tools=TOOL_SCHEMAS)
-        
-        if response.is_final_answer:
-            return response.content
-            
-        # LLM chose a tool — execute it
-        tool_result = execute_tool(response.tool_name, response.tool_args)
-        
-        # Feed result back
-        messages.append({"role": "tool", "content": tool_result})
-    
-    return "Max steps reached"
+    """Run the agent on a user query and return the final answer
+    # 1. Call client.models.generate_content(...)
+    # 2. Pass the model, the user_query, and the tool in config
+    # 3. Return the .text from the response
+    """
+
+    response = client.models.generate_content(
+    model=config.DEFAULT_MODEL,                    # hint: config.DEFAULT_MODEL
+    contents=user_query,                 # hint: the user's question
+    config={
+        "tools": [search_knowledge_base]            # hint: the tool function you just wrote
+        }
+    )
+    return response.text
