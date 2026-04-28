@@ -44,5 +44,5 @@ def query_knowledge_base(query, collection_name):
 if __name__ == "__main__":
     # print(search_knowledge_base("What are the key opportunities as one of the transport operators in Singapore?", "budget_2026"))
     # collection_full_refresh(path=RESEARCH_DIR/'budget_2026')
-    answer = run_agent("Who were the speakers for Ministry of Transport in Singapore's Budget 2026?")
+    answer = run_agent("Who were the speakers for Ministry of Education in Singapore's Budget 2026?")
     print(answer)

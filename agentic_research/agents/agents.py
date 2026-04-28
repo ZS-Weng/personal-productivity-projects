@@ -19,3 +19,20 @@ def run_agent(user_query: str, max_steps: int = 5):
         }
     )
     return response.text
+
+
+def run_agent_manual(user_query: str, max_steps: int = 5) -> str:
+    """Manual agent loop — we handle each tool call ourselves."""
+    
+    # 1. Initialise messages with the user's query
+    messages = [...]
+    
+    # 2. Loop up to max_steps times
+    for step in range(max_steps):
+        # a. Call the LLM with current messages + tools
+        # b. Check if it returned a tool call or a final answer
+        # c. If tool call → execute it, append result to messages
+        # d. If final answer → return it
+        ...
+    
+    return "Max steps reached without final answer."
