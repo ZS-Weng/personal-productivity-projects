@@ -25,7 +25,9 @@ def run_agent_manual(user_query: str, max_steps: int = 5) -> str:
     """Manual agent loop — we handle each tool call ourselves."""
     
     # 1. Initialise messages with the user's query
-    messages = [...]
+    messages = [
+    {"role": "user", "parts": [{"text": user_query}]}
+    ]
     
     # 2. Loop up to max_steps times
     for step in range(max_steps):
