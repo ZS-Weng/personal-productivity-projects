@@ -12,7 +12,7 @@ class PomoUpdate(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(name="index.html", request=request)
 
 @app.get("/api/pomos/{date}")
 async def get_pomos(date: str):
@@ -30,7 +30,7 @@ async def increment_pomos(date: str):
 
 @app.get("/analytics", response_class=HTMLResponse)
 async def analytics(request: Request):
-    return templates.TemplateResponse("analytics.html", {"request": request})
+    return templates.TemplateResponse(name="analytics.html", request=request)
 
 @app.get("/api/pomos")
 async def get_all_pomos():
