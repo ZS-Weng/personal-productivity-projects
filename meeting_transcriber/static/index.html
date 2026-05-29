@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meeting Transcriber</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --danger: #f87171; --ok: #4ade80; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+    select, input { width: 100%; padding: 9px 11px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+    button { cursor: pointer; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; padding: 11px 18px; transition: opacity .15s; }
+    button:hover { opacity: .85; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-rec { background: var(--accent); color: #042233; width: 100%; margin-top: 16px; }
+    .btn-stop { background: var(--danger); color: #2a0606; width: 100%; margin-top: 16px; }
+    .btn-sm { background: var(--border); color: var(--text); padding: 6px 12px; font-size: 13px; }
+    .timer { font-size: 32px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; margin: 8px 0; }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--danger); margin-right: 6px; animation: pulse 1.2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .rec { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .rec:last-child { border-bottom: none; }
+    .rec .meta { flex: 1; min-width: 0; }
+    .rec .fn { font-size: 14px; word-break: break-all; }
+    .rec .info { font-size: 12px; color: var(--muted); }
+    audio { height: 32px; }
+    .tag { font-size: 11px; padding: 2px 7px; border-radius: 6px; background: var(--border); color: var(--muted); }
+    .tag.ok { background: #14532d; color: var(--ok); }
+    .transcript { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 10px; font-size: 13px; max-height: 300px; overflow: auto; }
+    .err { color: var(--danger); font-size: 13px; margin-top: 8px; }
+    .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 16px; }
+    .spin { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--muted); border-top-color: transparent; border-radius: 50%; animation: rot .7s linear infinite; vertical-align: middle; }
+    @keyframes rot { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="wrap" x-data="app()" x-init="init()">
+  <h1>Meeting Transcriber</h1>
+  <div class="sub">Local recording &amp; transcription. Files saved to <code>~/MeetingData</code>.</div>
+
+  <div class="card">
+    <template x-if="!status.recording">
+      <div>
+        <label>Microphone (your voice)</label>
+        <select x-model.number="mic">
+          <option :value="null">— none —</option>
+          <template x-for="d in devices" :key="d.index">
+            <option :value="d.index" x-text="d.name + (d.is_blackhole ? '  (BlackHole)' : '')"></option>
+          </template>
+        </select>
+
+        <label>Meeting audio (route system output here, e.g. BlackHole)</label>
+        <select x-model.number="system">
+          <option :value="null">— none —</option>
+          <template x-for="d in devices" :key="d.index">
+            <option :value="d.index" x-text="d.name + (d.is_blackhole ? '  (BlackHole)' : '')"></option>
+          </template>
+        </select>
+
+        <label>Meeting name (optional)</label>
+        <input type="text" x-model="name" placeholder="e.g. weekly-sync" />
+
+        <button class="btn-rec" @click="start()" :disabled="mic === null && system === null">● Start recording</button>
+        <div class="err" x-text="error"></div>
+      </div>
+    </template>
+
+    <template x-if="status.recording">
+      <div>
+        <div style="text-align:center"><span class="dot"></span>Recording<span x-text="status.name ? ' — ' + status.name : ''"></span></div>
+        <div class="timer" x-text="fmt(status.elapsed)"></div>
+        <button class="btn-stop" @click="stop()" :disabled="stopping">
+          <span x-show="!stopping">■ Stop &amp; save</span>
+          <span x-show="stopping"><span class="spin"></span> Saving…</span>
+        </button>
+      </div>
+    </template>
+  </div>
+
+  <div class="card">
+    <h1 style="font-size:16px">Recordings</h1>
+    <template x-if="recordings.length === 0">
+      <div class="empty">No recordings yet.</div>
+    </template>
+    <template x-for="r in recordings" :key="r.filename">
+      <div>
+        <div class="rec">
+          <div class="meta">
+            <div class="fn" x-text="r.filename"></div>
+            <div class="info"><span x-text="r.created"></span> · <span x-text="r.size_mb"></span> MB
+              <span class="tag" :class="r.has_transcript ? 'ok' : ''" x-text="r.has_transcript ? 'transcribed' : 'no transcript'"></span>
+            </div>
+          </div>
+          <audio controls :src="'/audio/' + r.filename"></audio>
+          <button class="btn-sm" @click="transcribe(r)" :disabled="r.busy">
+            <span x-show="!r.busy" x-text="r.has_transcript ? 'View' : 'Transcribe'"></span>
+            <span x-show="r.busy"><span class="spin"></span></span>
+          </button>
+        </div>
+        <div class="transcript" x-show="r.open" x-text="r.transcript"></div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<script>
+function app() {
+  return {
+    devices: [], recordings: [], mic: null, system: null, name: '',
+    status: { recording: false, elapsed: 0, name: null },
+    error: '', stopping: false, _poll: null,
+
+    async init() {
+      await this.loadDevices();
+      await this.refreshStatus();
+      await this.loadRecordings();
+      this._poll = setInterval(() => this.refreshStatus(), 1000);
+    },
+    async loadDevices() {
+      const d = await (await fetch('/api/devices')).json();
+      this.devices = d.devices;
+      const bh = this.devices.find(x => x.is_blackhole);
+      const m = this.devices.find(x => !x.is_blackhole);
+      if (this.system === null && bh) this.system = bh.index;
+      if (this.mic === null && m) this.mic = m.index;
+    },
+    async refreshStatus() {
+      this.status = await (await fetch('/api/status')).json();
+    },
+    async loadRecordings() {
+      const d = await (await fetch('/api/recordings')).json();
+      this.recordings = d.recordings.map(r => ({ ...r, open: false, busy: false, transcript: '' }));
+    },
+    async start() {
+      this.error = '';
+      const res = await fetch('/api/start', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mic: this.mic, system: this.system, name: this.name })
+      });
+      if (!res.ok) { this.error = (await res.json()).detail; return; }
+      await this.refreshStatus();
+    },
+    async stop() {
+      this.stopping = true;
+      const res = await fetch('/api/stop', { method: 'POST' });
+      this.stopping = false;
+      if (!res.ok) { this.error = (await res.json()).detail; return; }
+      await this.refreshStatus();
+      await this.loadRecordings();
+    },
+    async transcribe(r) {
+      if (r.transcript) { r.open = !r.open; return; }
+      r.busy = true;
+      try {
+        const url = r.has_transcript ? '/api/transcript/' + encodeURIComponent(r.filename) : '/api/transcribe';
+        const opts = r.has_transcript ? {} : {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: r.filename })
+        };
+        const res = await fetch(url, opts);
+        const data = await res.json();
+        r.transcript = data.text; r.open = true; r.has_transcript = true;
+      } finally { r.busy = false; }
+    },
+    fmt(s) {
+      s = Math.floor(s);
+      const m = String(Math.floor(s / 60)).padStart(2, '0');
+      const sec = String(s % 60).padStart(2, '0');
+      return m + ':' + sec;
+    }
+  };
+}
+</script>
+</body>
+</html>
