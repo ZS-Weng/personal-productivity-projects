@@ -14,12 +14,13 @@
         <p id="today" class="text-sm opacity-70"></p>
 
          <a href="/analytics" class="btn btn-ghost btn-sm">📊 Analytics</a>
+        <button id="notif-btn" class="btn btn-ghost btn-sm" onclick="requestNotifPermission()"></button>
 
         <!-- Timer Display -->
         <div id="timer" class="text-7xl font-mono font-bold countdown">25:00</div>
 
         <!-- Status Badge -->
-        <div class="badge badge-lg" id="status-badge">Work</div>
+        <div class="badge badge-lg cursor-pointer select-none" id="status-badge" onclick="toggleMode()" title="Click to switch mode">Work</div>
 
         <!-- Controls -->
         <div class="flex gap-2">
@@ -103,10 +104,40 @@ function playSound(type) {
     });
 }
 
-function showNotification(title, body) {
-    if (Notification.permission === 'granted') {
-        new Notification(title, { body, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍅</text></svg>' });
+let swReg = null;
+
+function updateNotifButton() {
+    const btn = document.getElementById('notif-btn');
+    const p = Notification.permission;
+    btn.textContent = p === 'granted' ? '🔔 Notifications on' : p === 'denied' ? '🔕 Notifications blocked' : '🔔 Enable notifications';
+    btn.disabled = p === 'denied';
+}
+
+async function requestNotifPermission() {
+    await Notification.requestPermission();
+    updateNotifButton();
+}
+
+async function showNotification(title, body) {
+    if (Notification.permission !== 'granted') return;
+    const icon = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍅</text></svg>';
+    if (swReg) {
+        swReg.showNotification(title, { body, icon });
+    } else {
+        new Notification(title, { body, icon });
     }
+}
+
+function toggleMode() {
+    clearInterval(interval); interval = null;
+    isWork = !isWork;
+    remaining = parseInt(document.getElementById(isWork ? 'work-min' : 'rest-min').value) * 60;
+    updateDisplay();
+    const badge = document.getElementById('status-badge');
+    badge.textContent = isWork ? 'Work' : 'Rest';
+    badge.className = isWork ? 'badge badge-lg cursor-pointer select-none' : 'badge badge-lg badge-success cursor-pointer select-none';
+    document.getElementById('btn-start').disabled = false;
+    document.getElementById('btn-pause').disabled = true;
 }
 
 function resetTimer() {
@@ -194,7 +225,10 @@ async function savePomos() {
 }
 
 loadToday();
-if (Notification.permission === 'default') Notification.requestPermission();
+updateNotifButton();
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/sw.js').then(reg => { swReg = reg; });
+}
 </script>
 </body>
 </html>
