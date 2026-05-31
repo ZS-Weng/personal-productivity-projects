@@ -85,6 +85,30 @@ function updateDisplay() {
     document.getElementById('timer').textContent = fmt(remaining);
 }
 
+function playSound(type) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const beeps = type === 'work' ? [{f:880,t:0,d:0.15},{f:880,t:0.2,d:0.15},{f:1100,t:0.4,d:0.3}]
+                                  : [{f:660,t:0,d:0.2},{f:550,t:0.25,d:0.3}];
+    beeps.forEach(({f, t, d}) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = f;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.4, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + d);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + d + 0.05);
+    });
+}
+
+function showNotification(title, body) {
+    if (Notification.permission === 'granted') {
+        new Notification(title, { body, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍅</text></svg>' });
+    }
+}
+
 function resetTimer() {
     clearInterval(interval); interval = null;
     isWork = true;
@@ -106,8 +130,9 @@ function startTimer() {
         updateDisplay();
         if (remaining <= 0) {
             clearInterval(interval); interval = null;
-            alert("Time's up!");
             if (isWork) {
+                playSound('work');
+                showNotification('🍅 Work session done!', 'Great job! Time to take a break.');
                 fetch(`/api/pomos/${todayStr()}/increment`, {method:'POST'})
                     .then(r => r.json()).then(d => {
                         document.getElementById('pomo-count').textContent = d.count;
@@ -117,6 +142,8 @@ function startTimer() {
                 document.getElementById('status-badge').textContent = 'Rest';
                 document.getElementById('status-badge').className = 'badge badge-lg badge-success';
             } else {
+                playSound('rest');
+                showNotification('☕ Break time over!', 'Ready to focus? Start your next pomodoro.');
                 isWork = true;
                 remaining = parseInt(document.getElementById('work-min').value) * 60;
                 document.getElementById('status-badge').textContent = 'Work';
@@ -167,6 +194,7 @@ async function savePomos() {
 }
 
 loadToday();
+if (Notification.permission === 'default') Notification.requestPermission();
 </script>
 </body>
 </html>
